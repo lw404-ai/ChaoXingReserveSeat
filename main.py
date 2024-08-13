@@ -10,9 +10,7 @@ from utils import reserve, get_user_credentials
 
 class CustomFormatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
-        # 获取当前时间，转换为datetime对象
         ct = datetime.fromtimestamp(record.created)
-        # 增加八小时
         ct = ct + timedelta(hours=8)
         if datefmt:
             s = ct.strftime(datefmt)
@@ -27,13 +25,11 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
-# get_current_time = lambda action: time.strftime("%H:%M:%S", time.localtime(time.time() + 8*3600)) if action else time.strftime("%H:%M:%S", time.localtime(time.time()))
-get_current_time = lambda action: time.strftime("%H:%M:%S", time.localtime(time.time() + 8*3600-5*3600-20*60)) if action else time.strftime("%H:%M:%S", time.localtime(time.time()+ 8*3600-6*3600-18*60))
-get_current_dayofweek = lambda action: time.strftime("%A", time.localtime(time.time() + 8*3600-5*3600-20*60)) if action else time.strftime("%A", time.localtime(time.time()))
-# get_current_dayofweek = lambda action: time.strftime("%A", time.localtime(time.time() + 8*3600)) if action else time.strftime("%A", time.localtime(time.time()))
+get_current_time = lambda action: time.strftime("%H:%M:%S", time.localtime(time.time() + 8*3600)) if action else time.strftime("%H:%M:%S", time.localtime(time.time()))
+get_current_dayofweek = lambda action: time.strftime("%A", time.localtime(time.time() + 8*3600)) if action else time.strftime("%A", time.localtime(time.time()))
 
 
-SLEEPTIME = 0.3 # 每次抢座的间隔
+SLEEPTIME = 0.2 # 每次抢座的间隔
 ENDTIME = "20:01:00" # 根据学校的预约座位时间+1min即可
 ENABLE_SLIDER = False # 是否有滑块验证
 MAX_ATTEMPT = 20 # 最大尝试次数
@@ -66,14 +62,14 @@ def login_and_reserve(users, usernames, passwords, action, success_list=None):
 
 
 def main(users, action=False):
-    while get_current_time(action) < "19:59:57":
+    while get_current_time(action) < "19:59:55":
         if get_current_time(action) < "19:59:40":
             logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
             time.sleep(5)
         elif "19:59:40" <= get_current_time(action) < "19:59:50":
             logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
             time.sleep(3)
-        elif "19:59:50" <= get_current_time(action) < "19:59:57":
+        elif "19:59:50" <= get_current_time(action) < "19:59:55":
             logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
             time.sleep(1)
     if get_current_time(action) >= ENDTIME:
