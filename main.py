@@ -13,7 +13,7 @@ get_current_dayofweek = lambda action: time.strftime("%A", time.localtime(time.t
 
 
 SLEEPTIME = 0.2 # 每次抢座的间隔
-ENDTIME = "23:07:00" # 根据学校的预约座位时间+1min即可
+ENDTIME = "23:15:00" # 根据学校的预约座位时间+1min即可
 
 ENABLE_SLIDER = False # 是否有滑块验证
 MAX_ATTEMPT = 1 # 最大尝试次数
@@ -36,7 +36,7 @@ def login_and_reserve(users, usernames, passwords, action, success_list=None):
             logging.info("Today not set to reserve")
             continue
         if not success_list[index]: 
-            logging.info(f"----------- {username} -- {times} -- {seatid} try -----------")
+            logging.info(f"\n------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
             s = reserve(sleep_time=SLEEPTIME, max_attempt=MAX_ATTEMPT, enable_slider=ENABLE_SLIDER, reserve_next_day=RESERVE_NEXT_DAY)
             s.get_login_status()
             s.login(username, password)
@@ -84,7 +84,7 @@ def debug(users, action=False):
         if(current_dayofweek not in daysofweek):
             logging.info("Today not set to reserve")
             continue
-        logging.info(f"----------- {username} -- {times} -- {seatid} try -----------")
+        logging.info(f"------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
         s = reserve(sleep_time=SLEEPTIME,  max_attempt=MAX_ATTEMPT, enable_slider=ENABLE_SLIDER)
         s.get_login_status()
         s.login(username, password)
