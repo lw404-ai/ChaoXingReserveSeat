@@ -4,25 +4,43 @@ import time
 import argparse
 import os
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-
+from datetime import datetime, timedelta
 from utils import reserve, get_user_credentials
-get_current_time = lambda action: time.strftime("%H:%M:%S", time.localtime(time.time() + 8*3600)) if action else time.strftime("%H:%M:%S", time.localtime(time.time()))
+
+
+class CustomFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        # 获取当前时间，转换为datetime对象
+        ct = datetime.fromtimestamp(record.created)
+        # 增加八小时
+        ct = ct + timedelta(hours=8)
+        if datefmt:
+            s = ct.strftime(datefmt)
+        else:
+            s = ct.strftime("%Y-%m-%d %H:%M:%S")
+        return s
+
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+formatter = CustomFormatter(fmt='%(asctime)s  - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+# get_current_time = lambda action: time.strftime("%H:%M:%S", time.localtime(time.time() + 8*3600)) if action else time.strftime("%H:%M:%S", time.localtime(time.time()))
+get_current_time = lambda action: time.strftime("%H:%M:%S", time.localtime(time.time() + 8*3600)) if action else time.strftime("%H:%M:%S", time.localtime(time.time()+ 8*3600-5*3600-500))
 get_current_dayofweek = lambda action: time.strftime("%A", time.localtime(time.time() + 8*3600)) if action else time.strftime("%A", time.localtime(time.time()))
 
 
-SLEEPTIME = 0.2 # 每次抢座的间隔
+SLEEPTIME = 0.3 # 每次抢座的间隔
 ENDTIME = "20:01:00" # 根据学校的预约座位时间+1min即可
-
 ENABLE_SLIDER = False # 是否有滑块验证
-MAX_ATTEMPT = 5 # 最大尝试次数
+MAX_ATTEMPT = 20 # 最大尝试次数
 RESERVE_NEXT_DAY = True # 预约明天而不是今天的
 
                 
-
 def login_and_reserve(users, usernames, passwords, action, success_list=None):
-    logging.info(f"Global settings: \nSLEEPTIME: {SLEEPTIME}\nENDTIME: {ENDTIME}\nENABLE_SLIDER: {ENABLE_SLIDER}\nRESERVE_NEXT_DAY: {RESERVE_NEXT_DAY}")
+    logger.info(f"Global settings: \nSLEEPTIME: {SLEEPTIME}\nENDTIME: {ENDTIME}\nENABLE_SLIDER: {ENABLE_SLIDER}\nRESERVE_NEXT_DAY: {RESERVE_NEXT_DAY}")
     if action and len(usernames.split(",")) != len(users):
         raise Exception("user number should match the number of config")
     if success_list is None:
@@ -33,10 +51,10 @@ def login_and_reserve(users, usernames, passwords, action, success_list=None):
         if action:
             username, password = usernames.split(',')[index], passwords.split(',')[index]
         if(current_dayofweek not in daysofweek):
-            logging.info("Today not set to reserve")
+            logger.info("Today not set to reserve")
             continue
         if not success_list[index]: 
-            logging.info(f"\n------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
+            logger.info(f"\n------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
             s = reserve(sleep_time=SLEEPTIME, max_attempt=MAX_ATTEMPT, enable_slider=ENABLE_SLIDER, reserve_next_day=RESERVE_NEXT_DAY)
             s.get_login_status()
             s.login(username, password)
@@ -47,8 +65,19 @@ def login_and_reserve(users, usernames, passwords, action, success_list=None):
 
 
 def main(users, action=False):
-    current_time = get_current_time(action)
-    logging.info(f"start time {current_time}, action {'on' if action else 'off'}")
+    while get_current_time(action) < "19:59:57":
+        if get_current_time(action) < "19:59:40":
+            logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
+            time.sleep(5)
+        elif "19:59:40" <= get_current_time(action) < "19:59:50":
+            logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
+            time.sleep(3)
+        elif "19:59:50" <= get_current_time(action) < "19:59:57":
+            logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
+            time.sleep(1)
+    if get_current_time(action) >= ENDTIME:
+        logger.info(f"\n---停止执行---\n超过执行时间，当前时间为：{get_current_time(action)}")
+    logger.info(f"start time {get_current_time(action)}, action {'on' if action else 'off'}")
     attempt_times = 0
     usernames, passwords = None, None
     if action:
@@ -56,6 +85,7 @@ def main(users, action=False):
     success_list = None
     current_dayofweek = get_current_dayofweek(action)
     today_reservation_num = sum(1 for d in users if current_dayofweek in d.get('daysofweek'))
+    current_time = get_current_time(action)
     while current_time < ENDTIME:
         attempt_times += 1
         # try:
@@ -69,9 +99,9 @@ def main(users, action=False):
             return
 
 def debug(users, action=False):
-    logging.info(f"Global settings: \nSLEEPTIME: {SLEEPTIME}\nENDTIME: {ENDTIME}\nENABLE_SLIDER: {ENABLE_SLIDER}\nRESERVE_NEXT_DAY: {RESERVE_NEXT_DAY}")
+    logger.info(f"Global settings: \nSLEEPTIME: {SLEEPTIME}\nENDTIME: {ENDTIME}\nENABLE_SLIDER: {ENABLE_SLIDER}\nRESERVE_NEXT_DAY: {RESERVE_NEXT_DAY}")
     suc = False
-    logging.info(f" Debug Mode start! , action {'on' if action else 'off'}")
+    logger.info(f" Debug Mode start! , action {'on' if action else 'off'}")
     if action:
         usernames, passwords = get_user_credentials(action)
     current_dayofweek = get_current_dayofweek(action)
@@ -82,9 +112,9 @@ def debug(users, action=False):
         if action:
             username ,password = usernames.split(',')[index], passwords.split(',')[index]
         if(current_dayofweek not in daysofweek):
-            logging.info("Today not set to reserve")
+            logger.info("Today not set to reserve")
             continue
-        logging.info(f"------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
+        logger.info(f"------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
         s = reserve(sleep_time=SLEEPTIME,  max_attempt=MAX_ATTEMPT, enable_slider=ENABLE_SLIDER)
         s.get_login_status()
         s.login(username, password)

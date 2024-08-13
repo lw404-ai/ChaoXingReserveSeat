@@ -3,9 +3,31 @@ import json
 import requests
 import re
 import time
-import logging
 import datetime
+import logging
 from urllib3.exceptions import InsecureRequestWarning
+
+
+class CustomFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        # 获取当前时间，转换为datetime对象
+        ct = datetime.datetime.fromtimestamp(record.created)
+        # 增加八小时
+        ct = ct + datetime.timedelta(hours=8)
+        if datefmt:
+            s = ct.strftime(datefmt)
+        else:
+            s = ct.strftime("%Y-%m-%d %H:%M:%S")
+        return s
+
+# 配置logging
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+formatter = CustomFormatter(fmt='%(asctime)s  - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
 def get_date(day_offset: int=0):
     today = datetime.datetime.now().date()
     offset_day = today + datetime.timedelta(days=day_offset)
@@ -81,10 +103,10 @@ class reserve:
             url=self.login_url, params=parm, verify=False)
         obj = jsons.json()
         if obj['status']:
-            logging.info(f"User {username} login successfully")
+            logger.info(f"User {username} login successfully")
             return (True, '')
         else:
-            logging.info(f"User {username} login failed. Please check you password and username! ")
+            logger.info(f"User {username} login failed. Please check you password and username! ")
             return (False, obj['msg2'])
 
     # extra: get roomid
@@ -99,12 +121,12 @@ class reserve:
     # solve captcha 
 
     def resolve_captcha(self):
-        logging.info(f"Start to resolve captcha token")
+        logger.info(f"Start to resolve captcha token")
         captcha_token, bg, tp = self.get_slide_captcha_data()
-        logging.info(f"Successfully get prepared captcha_token {captcha_token}")
-        logging.info(f"Captcha Image URL-small {tp}, URL-big {bg}")
+        logger.info(f"Successfully get prepared captcha_token {captcha_token}")
+        logger.info(f"Captcha Image URL-small {tp}, URL-big {bg}")
         x = self.x_distance(bg, tp)
-        logging.info(f"Successfully calculate the captcha distance {x}")
+        logger.info(f"Successfully calculate the captcha distance {x}")
 
         params = {
             "callback": "jQuery33109180509737430778_1716381333117",
@@ -121,12 +143,12 @@ class reserve:
             f'https://captcha.chaoxing.com/captcha/check/verification/result', params=params, headers=self.headers)
         text = response.text.replace('jQuery33109180509737430778_1716381333117(', "").replace(')', "")
         data = json.loads(text)
-        logging.info(f"Successfully resolve the captcha token {data}")
+        logger.info(f"Successfully resolve the captcha token {data}")
         try: 
            validate_val = json.loads(data["extraData"])['validate']
            return validate_val
         except KeyError as e:
-            logging.info("Can't load validate value. Maybe server return mistake.")
+            logger.info("Can't load validate value. Maybe server return mistake.")
             return ""
 
     def get_slide_captcha_data(self):
@@ -201,9 +223,9 @@ class reserve:
             suc = False
             while ~suc and self.max_attempt > 0:
                 token = self._get_page_token(self.url.format(roomid, seat))
-                logging.info(f"Get token: {token}")
+                logger.info(f"Get token: {token}")
                 captcha = self.resolve_captcha() if self.enable_slider else "" 
-                logging.info(f"Captcha token {captcha}")
+                logger.info(f"Captcha token {captcha}")
                 suc = self.get_submit(self.submit_url, times=times,token=token, roomid=roomid, seatid=seat, captcha=captcha, action=action)
                 if suc:
                     return suc
@@ -215,7 +237,7 @@ class reserve:
         delta_day = 1 if self.reserve_next_day else 0
         day = datetime.date.today() + datetime.timedelta(days=0+delta_day)  # 预约今天，修改days=1表示预约明天
         if action:
-            day = datetime.date.today() + datetime.timedelta(days=1+delta_day)  # 由于action时区问题导致其早+8区一天
+            day = datetime.date.today() + datetime.timedelta(days=0+delta_day)  # 由于action时区问题导致其早+8区一天
         parm = {
             "roomId": roomid,
             "startTime": times[0],
@@ -225,11 +247,11 @@ class reserve:
             "captcha": captcha,
             "token": token
         }
-        logging.info(f"submit parameter {parm} ")
+        logger.info(f"submit parameter {parm} ")
         parm["enc"] = enc(parm)
         html = self.requests.post(
             url=url, params=parm, verify=True).content.decode('utf-8')
         self.submit_msg.append(
             times[0] + "~" + times[1] + ':  ' + str(json.loads(html)))
-        logging.info(f"{json.loads(html)} \n")
+        logger.info(f"{json.loads(html)} \n")
         return json.loads(html)["success"]
