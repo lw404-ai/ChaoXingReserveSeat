@@ -1,12 +1,12 @@
 # This is a basic workflow that is manually triggered
 
-name: auto_Reserve
+name: auto_Reserve_lw
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
 on:
   schedule:
-    - cron: "59 21 * * *" # 周一到周五每天早上5:59启动（防止github action过于高负载）
+    - cron: "58 11 * * *" # 周一到周五每天早上5:59启动（防止github action过于高负载）
   workflow_dispatch:
   
 jobs:
