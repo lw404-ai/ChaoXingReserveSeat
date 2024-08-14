@@ -257,7 +257,7 @@ if __name__ == '__main__':
 
     if '07:45:00' <= get_current_time() <= '08:15:00':
         print(lib.sign())
-    elif '21:45:00' <= get_current_time() <= '22:15:00':
+    elif '19:45:00' <= get_current_time() <= '19:55:00':
         print(lib.signback())
     else:
         print(lib.sign())

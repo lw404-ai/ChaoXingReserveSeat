@@ -152,6 +152,7 @@ def main(users, action=False):
                 send_message(wxuid[i], accessToken, tpl_id[0], success_list)
             return 0
     accessToken, wxuserid, template_id = get_access_token()
+    tpl_id = template_id.split(',')
     wxuid = wxuserid.split(',')
     for i in range(len(wxuid)):
         send_message(wxuid[i], accessToken, tpl_id[0], success_list)
