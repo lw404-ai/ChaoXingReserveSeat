@@ -20,8 +20,6 @@ def send_message(wxuid, access_token, template_id, wxmessage):
     status = wxmessage.split('：')[-1]
     schloc = wxmessage.split('：')[0][:9]
     seatloc = wxmessage.split('：')[0][9:]
-    print("鸿运当头 666")
-    print(schloc,seatloc,status)
     url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}".format(access_token)
     data = {
         "touser": wxuid,
