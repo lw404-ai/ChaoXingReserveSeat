@@ -252,4 +252,4 @@ if __name__ == '__main__':
         print(lib.signback())
     else:
         print(lib.sign())
-        print("Error: Invalid function. Please use 'sign' or 'signback'.")
+        print("Error: 未在规定时间，估采用签到策略执行.")
