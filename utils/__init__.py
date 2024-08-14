@@ -13,3 +13,10 @@ def get_user_credentials(action):
     usernames = _fetch_env_variables('USERNAMES', action)
     passwords = _fetch_env_variables('PASSWORDS', action)
     return usernames, passwords
+
+def get_app_credentials(action):
+    app_id = _fetch_env_variables('APPID', action)
+    app_secret = _fetch_env_variables('APPSECRET', action)
+    wxuserid = _fetch_env_variables('WXUSERID', action)
+    template_id = _fetch_env_variables('TEMPLATEID', action)
+    return app_id, app_secret, wxuserid, template_id

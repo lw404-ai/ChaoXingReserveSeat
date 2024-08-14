@@ -4,8 +4,9 @@ import time
 import argparse
 import os
 import logging
+from requests import get, post
 from datetime import datetime, timedelta
-from utils import reserve, get_user_credentials
+from utils import reserve, get_user_credentials, get_app_credentials
 
 
 class CustomFormatter(logging.Formatter):
@@ -32,10 +33,44 @@ get_current_dayofweek = lambda action: time.strftime("%A", time.localtime(time.t
 SLEEPTIME = 0.2 # 每次抢座的间隔
 ENDTIME = "20:01:00" # 根据学校的预约座位时间+1min即可
 ENABLE_SLIDER = False # 是否有滑块验证
-MAX_ATTEMPT = 20 # 最大尝试次数
+MAX_ATTEMPT = 1 # 最大尝试次数
 RESERVE_NEXT_DAY = True # 预约明天而不是今天的
 
-                
+
+def get_access_token(action=True):
+    app_id, app_secret, wxuserid, template_id = get_app_credentials(action)
+    post_url = ("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}"
+                .format(app_id, app_secret))
+    access_token = get(post_url).json()['access_token']
+    return access_token, wxuserid , template_id
+
+def send_message(wxuid, access_token, template_id, success_list):
+    url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}".format(access_token)
+    data = {
+        "touser": wxuid,
+        "template_id": template_id,
+        "url": "http://weixin.qq.com/download",
+        "topcolor": "#FF0000",
+        "data": {
+            "reserve": {
+                "value": success_list,
+                "color": "#00FFFF"
+            },
+            "date": {
+                "value": get_current_time(action=True),
+                "color": "#00FFFF"
+            }
+        }
+    }
+    headers = {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                      'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
+    }
+    response = post(url, headers=headers, json=data)
+    return response
+
+
 def login_and_reserve(users, usernames, passwords, action, success_list=None):
     logger.info(f"Global settings: \nSLEEPTIME: {SLEEPTIME}\nENDTIME: {ENDTIME}\nENABLE_SLIDER: {ENABLE_SLIDER}\nRESERVE_NEXT_DAY: {RESERVE_NEXT_DAY}")
     if action and len(usernames.split(",")) != len(users):
@@ -62,6 +97,7 @@ def login_and_reserve(users, usernames, passwords, action, success_list=None):
 
 
 def main(users, action=False):
+    logger.info(f"当前系统时间为：{get_current_time(action=False)}")
     while get_current_time(action) < "19:59:55":
         if get_current_time(action) < "19:59:40":
             logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
@@ -85,15 +121,22 @@ def main(users, action=False):
     current_time = get_current_time(action)
     while current_time < ENDTIME:
         attempt_times += 1
-        # try:
         success_list = login_and_reserve(users, usernames, passwords, action, success_list)
-        # except Exception as e:
-        #     print(f"An error occurred: {e}")
         print(f"attempt time {attempt_times}, time now {current_time}, success list {success_list}")
         current_time = get_current_time(action)
         if sum(success_list) == today_reservation_num:
             print(f"reserved successfully!")
-            return
+            accessToken, wxuserid, template_id = get_access_token()
+            wxuid = wxuserid.split(',')
+            for i in len(wxuid):
+                send_message(wxuid[i], accessToken, template_id, success_list)
+            return 0
+    accessToken, wxuserid, template_id = get_access_token()
+    wxuid = wxuserid.split(',')
+    for i in len(wxuid):
+        send_message(wxuid[i], accessToken, template_id, success_list)
+    return 0
+
 
 def debug(users, action=False):
     logger.info(f"Global settings: \nSLEEPTIME: {SLEEPTIME}\nENDTIME: {ENDTIME}\nENABLE_SLIDER: {ENABLE_SLIDER}\nRESERVE_NEXT_DAY: {RESERVE_NEXT_DAY}")
