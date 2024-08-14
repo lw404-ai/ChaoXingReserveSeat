@@ -129,6 +129,7 @@ def main(users, action=False):
             time.sleep(1)
     if get_current_time(action) >= ENDTIME:
         logger.info(f"\n---停止执行---\n超过执行时间，当前时间为：{get_current_time(action)}")
+        return 0
     logger.info(f"start time {get_current_time(action)}, action {'on' if action else 'off'}")
     attempt_times = 0
     usernames, passwords = None, None
