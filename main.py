@@ -147,13 +147,14 @@ def main(users, action=False):
             print(f"reserved successfully!")
             accessToken, wxuserid, template_id = get_access_token()
             wxuid = wxuserid.split(',')
+            tpl_id = template_id.split(',')
             for i in len(wxuid):
-                send_message(wxuid[i], accessToken, template_id, success_list)
+                send_message(wxuid[i], accessToken, tpl_id[0], success_list)
             return 0
     accessToken, wxuserid, template_id = get_access_token()
     wxuid = wxuserid.split(',')
     for i in range(len(wxuid)):
-        send_message(wxuid[i], accessToken, template_id, success_list)
+        send_message(wxuid[i], accessToken, tpl_id[0], success_list)
     return 0
 
 
