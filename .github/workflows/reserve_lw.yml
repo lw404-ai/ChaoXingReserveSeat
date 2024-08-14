@@ -5,8 +5,8 @@ name: auto_Reserve_lw
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
 on:
-  schedule:
-    - cron: "58 11 * * *" # 周一到周五每天晚上19:58启动
+  # schedule:
+  #   - cron: "58 11 * * *" # 周一到周五每天晚上19:58启动
   workflow_dispatch:
   
 jobs:
@@ -29,6 +29,10 @@ jobs:
         env:
           USERNAMES: ${{ secrets.USERNAMES }}
           PASSWORDS: ${{ secrets.PASSWORDS }}
+          APPID: ${{ secrets.APPID }}
+          APPSECRET: ${{ secrets.APPSECRET }}
+          WXUSERID: ${{ secrets.WXUSERID }}
+          TEMPLATEID: ${{ secrets.TEMPLATEID }}
         run: |
           python main.py -m reserve --action
 
