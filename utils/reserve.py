@@ -103,10 +103,10 @@ class reserve:
             url=self.login_url, params=parm, verify=False)
         obj = jsons.json()
         if obj['status']:
-            logger.info(f"User {username} login successfully")
+            logger.info(f"User login successfully")
             return (True, '')
         else:
-            logger.info(f"User {username} login failed. Please check you password and username! ")
+            logger.info(f"User login failed. Please check you password and username! ")
             return (False, obj['msg2'])
 
     # extra: get roomid
@@ -223,9 +223,9 @@ class reserve:
             suc = False
             while ~suc and self.max_attempt > 0:
                 token = self._get_page_token(self.url.format(roomid, seat))
-                logger.info(f"Get token: {token}")
+                logger.info(f"Get user token")
                 captcha = self.resolve_captcha() if self.enable_slider else "" 
-                logger.info(f"Captcha token {captcha}")
+                logger.info(f"Get captcha token")
                 suc = self.get_submit(self.submit_url, times=times,token=token, roomid=roomid, seatid=seat, captcha=captcha, action=action)
                 if suc:
                     return suc
@@ -247,7 +247,10 @@ class reserve:
             "captcha": captcha,
             "token": token
         }
-        logger.info(f"submit parameter {parm} ")
+        selected_info_1 = f"roomId: {parm['roomId']}, seatNum: {parm['seatNum']}"
+        selected_info_2 = f"day: {parm['day']}, start: {parm['startTime']}, end: {parm['endTime']}"
+        logger.info(f"submit parameter: [{selected_info_1}]")
+        logger.info(f"submit parameter: [{selected_info_2}]") 
         parm["enc"] = enc(parm)
         html = self.requests.post(
             url=url, params=parm, verify=True).content.decode('utf-8')
