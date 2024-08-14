@@ -25,10 +25,10 @@ def send_message(wxuid, access_token, template_id, wxmessage):
         "topcolor": "#FF0000",
         "data": {
             "date": {
-                "value": f"{datetime.date.today() + datetime.timedelta(days=1)}",
+                "value": f"{time.strftime('%Y-%m-%d', time.localtime(time.time() + 8*3600))}",
             },
             "time": {
-                "value": f"{time.strftime(" % H: % M: % S", time.localtime(time.time() + 8*3600))}",
+                "value": f"{time.strftime('%H:%M:%S', time.localtime(time.time() + 8*3600))}",
             },
             "wxmessage": {
                 "value": f"{str(wxmessage)}",
