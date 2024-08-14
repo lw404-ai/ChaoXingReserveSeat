@@ -29,12 +29,12 @@ logger.setLevel(logging.INFO)
 # get_current_time = lambda action: time.strftime("%H:%M:%S", time.localtime(time.time() + 8*3600)) if action else time.strftime("%H:%M:%S", time.localtime(time.time()))
 # get_current_dayofweek = lambda action: time.strftime("%A", time.localtime(time.time() + 8*3600)) if action else time.strftime("%A", time.localtime(time.time()))
 
-get_current_time = lambda action: time.strftime("%H:%M:%S", time.localtime(time.time() + 16*3600 - 30*60)) if action else time.strftime("%H:%M:%S", time.localtime(time.time()))
-get_current_dayofweek = lambda action: time.strftime("%A", time.localtime(time.time() + 16*3600 - 30*60)) if action else time.strftime("%A", time.localtime(time.time()))
+get_current_time = lambda action: time.strftime("%H:%M:%S", time.localtime(time.time() + 16*3600 - 34*60)) if action else time.strftime("%H:%M:%S", time.localtime(time.time()))
+get_current_dayofweek = lambda action: time.strftime("%A", time.localtime(time.time() + 16*3600 - 34*60)) if action else time.strftime("%A", time.localtime(time.time()))
 
 
 SLEEPTIME = 0.2 # 每次抢座的间隔
-ENDTIME = "20:00:20" # 根据学校的预约座位时间+1min即可
+ENDTIME = "20:00:10" # 根据学校的预约座位时间+1min即可
 ENABLE_SLIDER = False # 是否有滑块验证
 MAX_ATTEMPT = 1 # 最大尝试次数
 RESERVE_NEXT_DAY = True # 预约明天而不是今天的
@@ -136,7 +136,7 @@ def main(users, action=False):
             return 0
     accessToken, wxuserid, template_id = get_access_token()
     wxuid = wxuserid.split(',')
-    for i in len(wxuid):
+    for i in range(len(wxuid)):
         send_message(wxuid[i], accessToken, template_id, success_list)
     return 0
 
