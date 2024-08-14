@@ -17,6 +17,9 @@ def get_access_token(action=True):
 
 
 def send_message(wxuid, access_token, template_id, wxmessage):
+    status = wxmessage.split('：')[-1]
+    schloc = wxmessage.split('：')[0][:9]
+    seatloc = wxmessage.split('：')[0][9:]
     url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}".format(access_token)
     data = {
         "touser": wxuid,
@@ -30,8 +33,14 @@ def send_message(wxuid, access_token, template_id, wxmessage):
             "time": {
                 "value": f"{time.strftime('%H:%M:%S', time.localtime(time.time() + 8*3600))}",
             },
-            "wxmessage": {
-                "value": f"{str(wxmessage)}",
+            "schloc": {
+                "value": f"{schloc}",
+            },
+            "seatloc": {
+                "value": f"{seatloc}座位",
+            },
+            "status": {
+                "value": f"{status}",
             }
         }
     }
