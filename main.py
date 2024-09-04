@@ -117,16 +117,13 @@ def login_and_reserve(users, usernames, passwords, action, success_list=None):
 
 def main(users, action=False):
     logger.info(f"当前系统时间为：{get_current_time(action=False)}")
-    while get_current_time(action) < "19:59:55":
+    while get_current_time(action) < "19:59:50":
         if get_current_time(action) < "19:59:40":
             logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
             time.sleep(5)
         elif "19:59:40" <= get_current_time(action) < "19:59:50":
             logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
-            time.sleep(3)
-        elif "19:59:50" <= get_current_time(action) < "19:59:55":
-            logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
-            time.sleep(1)
+            time.sleep(2)
     if get_current_time(action) >= ENDTIME:
         logger.info(f"\n---停止执行---\n超过执行时间，当前时间为：{get_current_time(action)}")
         return 0

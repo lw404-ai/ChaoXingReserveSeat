@@ -20,6 +20,9 @@ class CustomFormatter(logging.Formatter):
             s = ct.strftime("%Y-%m-%d %H:%M:%S")
         return s
 
+def get_current_time(action): return time.strftime("%H:%M:%S", time.localtime(time.time() + 8*3600)
+                                                   ) if action else time.strftime("%H:%M:%S", time.localtime(time.time()))
+
 # 配置logging
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
@@ -226,6 +229,10 @@ class reserve:
                 logger.info(f"Get user token")
                 captcha = self.resolve_captcha() if self.enable_slider else "" 
                 logger.info(f"Get captcha token")
+
+                while get_current_time(action=True) < "20:00:00":
+                    time.sleep(0.1)
+
                 suc = self.get_submit(self.submit_url, times=times,token=token, roomid=roomid, seatid=seat, captcha=captcha, action=action)
                 if suc:
                     return suc
