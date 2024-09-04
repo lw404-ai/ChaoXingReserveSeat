@@ -63,7 +63,7 @@ def send_message(wxuid, access_token, template_id, success_list):
                 "value": f"{datetime.date.today() + datetime.timedelta(days=1)}",
             },
             "seatID": {
-                "value": "033",
+                "value": "084",
             },
             "reserve_1": {
                 "value": "失败，请及时检查原因！" if not success_list[0] else "预约成功！",
