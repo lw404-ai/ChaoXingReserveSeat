@@ -36,7 +36,7 @@ def get_current_dayofweek(action): return time.strftime("%A", time.localtime(tim
                                                         ) if action else time.strftime("%A", time.localtime(time.time()))
 
 
-SLEEPTIME = 0.2  # 每次抢座的间隔
+SLEEPTIME = 0  # 每次抢座的间隔
 ENDTIME = "20:01:00"  # 根据学校的预约座位时间+1min即可
 ENABLE_SLIDER = False  # 是否有滑块验证
 MAX_ATTEMPT = 10  # 最大尝试次数
@@ -63,7 +63,7 @@ def send_message(wxuid, access_token, template_id, success_list):
                 "value": f"{datetime.date.today() + datetime.timedelta(days=1)}",
             },
             "seatID": {
-                "value": "084",
+                "value": "090",
             },
             "reserve_1": {
                 "value": "失败，请及时检查原因！" if not success_list[0] else "预约成功！",
@@ -96,21 +96,26 @@ def login_and_reserve(users, usernames, passwords, action, success_list=None):
     if success_list is None:
         success_list = [False] * len(users)
     current_dayofweek = get_current_dayofweek(action)
+    username, password, _, _, _, _ = users[0].values()
+
+    if action:
+        username, password = usernames.split(',')[0], passwords.split(',')[0]
+
+    s = reserve(sleep_time=SLEEPTIME, max_attempt=MAX_ATTEMPT,
+                enable_slider=ENABLE_SLIDER, reserve_next_day=RESERVE_NEXT_DAY)
+    s.get_login_status()
+    s.login(username, password)
+    s.requests.headers.update({'Host': 'office.chaoxing.com'})
+
     for index, user in enumerate(users):
-        username, password, times, roomid, seatid, daysofweek = user.values()
-        if action:
-            username, password = usernames.split(',')[index], passwords.split(',')[index]
+        _, _, times, roomid, seatid, daysofweek = user.values()
         if (current_dayofweek not in daysofweek):
-            logger.info("Today not set to reserve")
+            logging.info("Today not set to reserve")
             continue
         if not success_list[index]:
-            logger.info(f"\n------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
-            s = reserve(sleep_time=SLEEPTIME, max_attempt=MAX_ATTEMPT,
-                        enable_slider=ENABLE_SLIDER, reserve_next_day=RESERVE_NEXT_DAY)
-            s.get_login_status()
-            s.login(username, password)
-            s.requests.headers.update({'Host': 'office.chaoxing.com'})
+            logging.info(f"\n------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
             suc = s.submit(times, roomid, seatid, action)
+            s.max_attempt = MAX_ATTEMPT
             success_list[index] = suc
     return success_list
 
