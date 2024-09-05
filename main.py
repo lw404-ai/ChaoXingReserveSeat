@@ -110,10 +110,10 @@ def login_and_reserve(users, usernames, passwords, action, success_list=None):
     for index, user in enumerate(users):
         _, _, times, roomid, seatid, daysofweek = user.values()
         if (current_dayofweek not in daysofweek):
-            logging.info("Today not set to reserve")
+            logger.info("Today not set to reserve")
             continue
         if not success_list[index]:
-            logging.info(f"\n------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
+            logger.info(f"\n------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
             suc = s.submit(times, roomid, seatid, action)
             s.max_attempt = MAX_ATTEMPT
             success_list[index] = suc
