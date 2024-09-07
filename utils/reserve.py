@@ -17,7 +17,7 @@ class CustomFormatter(logging.Formatter):
         if datefmt:
             s = ct.strftime(datefmt)
         else:
-            s = ct.strftime("%Y-%m-%d %H:%M:%S")
+            s = ct.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         return s
 
 def get_current_time(action): return time.strftime("%H:%M:%S", time.localtime(time.time() + 8*3600)
