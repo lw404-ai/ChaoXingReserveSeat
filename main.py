@@ -16,7 +16,7 @@ class CustomFormatter(logging.Formatter):
         if datefmt:
             s = ct.strftime(datefmt)
         else:
-            s = ct.strftime("%Y-%m-%d %H:%M:%S")
+            s = ct.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         return s
 
 
@@ -36,11 +36,11 @@ def get_current_dayofweek(action): return time.strftime("%A", time.localtime(tim
                                                         ) if action else time.strftime("%A", time.localtime(time.time()))
 
 
-SLEEPTIME = 0  # 每次抢座的间隔
-ENDTIME = "20:01:00"  # 根据学校的预约座位时间+1min即可
-ENABLE_SLIDER = False  # 是否有滑块验证
-MAX_ATTEMPT = 10  # 最大尝试次数
-RESERVE_NEXT_DAY = True  # 预约明天而不是今天的
+SLEEPTIME = 0
+ENDTIME = "20:01:00"
+ENABLE_SLIDER = False
+MAX_ATTEMPT = 10
+RESERVE_NEXT_DAY = True
 
 
 def get_access_token(action=True):
@@ -51,7 +51,7 @@ def get_access_token(action=True):
     return access_token, wxuserid, template_id
 
 
-def send_message(wxuid, access_token, template_id, success_list):
+def send_message(wxuid, access_token, template_id, success_list, seatid_choose):
     url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}".format(access_token)
     data = {
         "touser": wxuid,
@@ -63,7 +63,7 @@ def send_message(wxuid, access_token, template_id, success_list):
                 "value": f"{datetime.date.today() + datetime.timedelta(days=1)}",
             },
             "seatID": {
-                "value": "090",
+                "value": f"{seatid_choose}",
             },
             "reserve_1": {
                 "value": "失败，请及时检查原因！" if not success_list[0] else "预约成功！",
@@ -109,15 +109,16 @@ def login_and_reserve(users, usernames, passwords, action, success_list=None):
 
     for index, user in enumerate(users):
         _, _, times, roomid, seatid, daysofweek = user.values()
+        seatid_choose = seatid
         if (current_dayofweek not in daysofweek):
             logger.info("Today not set to reserve")
             continue
         if not success_list[index]:
-            logger.info(f"\n------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
+            logger.info(f"------ 第{index+1}次预约 -- {times} -- {seatid} TRY ------")
             suc = s.submit(times, roomid, seatid, action)
             s.max_attempt = MAX_ATTEMPT
             success_list[index] = suc
-    return success_list
+    return success_list, seatid_choose
 
 
 def main(users, action=False):
@@ -130,7 +131,7 @@ def main(users, action=False):
             logger.info(f"正在等待执行，当前时间为：{get_current_time(action)}")
             time.sleep(2)
     if get_current_time(action) >= ENDTIME:
-        logger.info(f"\n---停止执行---\n超过执行时间，当前时间为：{get_current_time(action)}")
+        logger.info(f"---停止执行---\n超过执行时间，当前时间为：{get_current_time(action)}")
         return 0
     logger.info(f"start time {get_current_time(action)}, action {'on' if action else 'off'}")
     attempt_times = 0
@@ -143,7 +144,7 @@ def main(users, action=False):
     current_time = get_current_time(action)
     while current_time < ENDTIME:
         attempt_times += 1
-        success_list = login_and_reserve(users, usernames, passwords, action, success_list)
+        success_list, seatid_choose = login_and_reserve(users, usernames, passwords, action, success_list)
         print(f"attempt time {attempt_times}, time now {current_time}, success list {success_list}")
         current_time = get_current_time(action)
         if sum(success_list) == today_reservation_num:
@@ -152,13 +153,13 @@ def main(users, action=False):
             wxuid = wxuserid.split(',')
             tpl_id = template_id.split(',')
             for i in range(len(wxuid)):
-                send_message(wxuid[i], accessToken, tpl_id[0], success_list)
+                send_message(wxuid[i], accessToken, tpl_id[0], success_list, seatid_choose)
             return 0
     accessToken, wxuserid, template_id = get_access_token()
     tpl_id = template_id.split(',')
     wxuid = wxuserid.split(',')
     for i in range(len(wxuid)):
-        send_message(wxuid[i], accessToken, tpl_id[0], success_list)
+        send_message(wxuid[i], accessToken, tpl_id[0], success_list, seatid_choose)
     return 0
 
 
@@ -190,13 +191,13 @@ def debug(users, action=False):
 
 
 def get_roomid(args1, args2):
-    username = input("请输入用户名：")
-    password = input("请输入密码：")
+    username = input("username: ")
+    password = input("password: ")
     s = reserve(sleep_time=SLEEPTIME, max_attempt=MAX_ATTEMPT, enable_slider=ENABLE_SLIDER, reserve_next_day=RESERVE_NEXT_DAY)
     s.get_login_status()
     s.login(username=username, password=password)
     s.requests.headers.update({'Host': 'office.chaoxing.com'})
-    encode = input("请输入deptldEnc：")
+    encode = input("deptldEnc: ")
     s.roomid(encode)
 
 

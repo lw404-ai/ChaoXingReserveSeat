@@ -106,7 +106,7 @@ class reserve:
             url=self.login_url, params=parm, verify=False)
         obj = jsons.json()
         if obj['status']:
-            logger.info(f"User login successfully")
+            logger.info(f"User login successfully \n")
             return (True, '')
         else:
             logger.info(f"User login failed. Please check you password and username! ")
@@ -231,12 +231,12 @@ class reserve:
                 logger.info(f"Get captcha token")
 
                 while get_current_time(action=True) < "20:00:00":
-                    time.sleep(0.1)
+                    time.sleep(0.001)
 
                 suc = self.get_submit(self.submit_url, times=times,token=token, roomid=roomid, seatid=seat, captcha=captcha, action=action)
                 if suc:
                     return suc
-                time.sleep(self.sleep_time)
+                # time.sleep(self.sleep_time)
                 self.max_attempt -= 1
         return suc
 
@@ -263,5 +263,11 @@ class reserve:
             url=url, params=parm, verify=True).content.decode('utf-8')
         self.submit_msg.append(
             times[0] + "~" + times[1] + ':  ' + str(json.loads(html)))
-        logger.info(f"{json.loads(html)} \n")
-        return json.loads(html)["success"]
+        data = json.loads(html)
+        new_data = {
+            'levelName': data['data']['seatReserve']['secondLevelName'],    
+            'seatNum': data['data']['seatReserve']['seatNum'],  
+            'success': data['success']
+        }
+        logger.info(f"{new_data} \n")
+        return data["success"]
