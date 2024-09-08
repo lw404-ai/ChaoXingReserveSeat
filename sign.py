@@ -176,17 +176,17 @@ class Library:
             }
             response = self.session.get(
                 url='https://office.chaoxing.com/data/apps/seat/sign', params=sign_data)
-            print(response.text)
+            # print(response.text)
             if response.json()['success']:
-                print(self.acc, '签到', '成功', location)
-                wxmessage = "{}：签到成功".format(location)
+                # print(self.acc, '签到', '成功', location)
+                wxmessage = "{}位置：签到成功".format(location)
                 accessToken, wxuserid, template_id = get_access_token()
                 wxuid = wxuserid.split(',')
                 tpl_id = template_id.split(',')
                 for i in range(len(wxuid)):
                     send_message(wxuid[i], accessToken, tpl_id[1], wxmessage)
                 return wxmessage
-            return "{}：{}".format(location, response.json()['msg'])
+            return "{}位置：{}".format(location[9:], response.json()['msg'])
         return "没有座位可以签到"
 
     # 暂离
@@ -213,14 +213,14 @@ class Library:
                 response = self.session.get(
                     url='https://office.chaoxing.com/data/apps/seat/signback?id={}'.format(index['id']))
                 if response.json()['success']:
-                    wxmessage = "{}：座位已退出".format(location)
+                    wxmessage = "{}位置：已退出".format(location)
                     accessToken, wxuserid, template_id = get_access_token()
                     wxuid = wxuserid.split(',')
                     tpl_id = template_id.split(',')
                     for i in range(len(wxuid)):
                         send_message(wxuid[i], accessToken, tpl_id[1], wxmessage)
                     return wxmessage
-                return "{}：{}".format(location, response.json()['msg'])
+                return "{}位置：{}".format(location[9:], response.json()['msg'])
         return "当前没有座位可退"
 
     # 取消
@@ -234,7 +234,7 @@ class Library:
                     url='https://office.chaoxing.com/data/apps/seat/cancel?id={}'.format(index['id']))
                 if response.json()['success']:
                     return "{}：座位已取消".format(location)
-                return "{}：{}".format(location, response.json()['msg'])
+                return "{}：{}".format(location[9:], response.json()['msg'])
         return "当前没有座位可取消"
 
     # 获取最近预约的座位ID
