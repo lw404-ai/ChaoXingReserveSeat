@@ -179,7 +179,7 @@ class Library:
             # print(response.text)
             if response.json()['success']:
                 # print(self.acc, '签到', '成功', location)
-                wxmessage = "{}位置：签到成功".format(location)
+                wxmessage = "{}：签到成功".format(location)
                 accessToken, wxuserid, template_id = get_access_token()
                 wxuid = wxuserid.split(',')
                 tpl_id = template_id.split(',')
@@ -213,7 +213,7 @@ class Library:
                 response = self.session.get(
                     url='https://office.chaoxing.com/data/apps/seat/signback?id={}'.format(index['id']))
                 if response.json()['success']:
-                    wxmessage = "{}位置：已退出".format(location)
+                    wxmessage = "{}：已退出".format(location)
                     accessToken, wxuserid, template_id = get_access_token()
                     wxuid = wxuserid.split(',')
                     tpl_id = template_id.split(',')
