@@ -145,8 +145,8 @@ def main(users, action=False):
     while current_time < ENDTIME:
         attempt_times += 1
         success_list, seatid_choose = login_and_reserve(users, usernames, passwords, action, success_list)
-        print(f"attempt time {attempt_times}, time now {current_time}, success list {success_list}")
         current_time = get_current_time(action)
+        print(f"attempt time {attempt_times}, time now {current_time}, success list {success_list}")
         if sum(success_list) == today_reservation_num:
             print(f"reserved successfully!")
             accessToken, wxuserid, template_id = get_access_token()

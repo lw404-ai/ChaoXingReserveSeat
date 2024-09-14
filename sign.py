@@ -84,6 +84,10 @@ class Library:
     @classmethod
     def t_time(cls, timestamp):
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(str(timestamp)[0:10])))
+    
+    @classmethod
+    def t_time_hms(cls, timestamp):
+        return time.strftime("%H:%M:%S", time.localtime(int(str(timestamp)[0:10])))
 
     @classmethod
     def get_date(cls):
@@ -124,19 +128,29 @@ class Library:
 
     # 历史座位预定情况
     def get_seat_reservation_info(self):
+        status_0 = []
+        status_1 = []
         response = self.session.get(url='https://office.chaoxing.com/data/apps/seat/reservelist?'
                                         'indexId=0&'
                                         'pageSize=100&'
                                         'type=-1').json()['data']['reserveList']
         for index in response:
             if index['type'] == -1:
-                print(index['seatNum'], index['id'], index['firstLevelName'], index['secondLevelName'],
-                      index['thirdLevelName'], self.t_time(index['startTime']), self.t_time(index['endTime']),
-                      self.t_second(index['learnDuration']), self.status[str(index['status'])])
+                # print(index['seatNum'], index['id'], index['firstLevelName'], index['secondLevelName'],
+                #       index['thirdLevelName'], self.t_time(index['startTime']), self.t_time(index['endTime']),
+                #       self.t_second(index['learnDuration']), self.status[str(index['status'])])
+                if index['status'] == 0 : # 待履约
+                    status_0.append(index)
+                elif index['status'] == 1 : # 学习中
+                    status_1.append(index)
+                
+                return status_0, status_1
             else:
-                print(index['seatNum'], index['id'], index['firstLevelName'], index['secondLevelName'],
-                      index['thirdLevelName'], self.t_time(index['startTime']), self.t_time(index['endTime']),
-                      self.t_second(index['learnDuration']), '违约')
+                # 违约记录
+                # print(index['seatNum'], index['id'], index['firstLevelName'], index['secondLevelName'],
+                #       index['thirdLevelName'], self.t_time(index['startTime']), self.t_time(index['endTime']),
+                #       self.t_second(index['learnDuration']), '违约')
+                return [], []
 
     # 签到
     def sign(self):
@@ -146,7 +160,7 @@ class Library:
             if index['status'] == 1:
                 location = index['firstLevelName'] + index['secondLevelName'] + index['thirdLevelName'] + index[
                     'seatNum']
-                return "{}:已经签过到了，快学习吧~".format(location)
+                return "已经签过到了，快学习吧~"
             if index['status'] == 0 or index['status'] == 3 or index['status'] == 5:
                 data_i.append(index)
                 continue
@@ -185,7 +199,7 @@ class Library:
                 tpl_id = template_id.split(',')
                 for i in range(len(wxuid)):
                     send_message(wxuid[i], accessToken, tpl_id[1], wxmessage)
-                return wxmessage
+                return "{}位置：{}".format(location[9:], response.json()['msg'])
             return "{}位置：{}".format(location[9:], response.json()['msg'])
         return "没有座位可以签到"
 
@@ -219,7 +233,7 @@ class Library:
                     tpl_id = template_id.split(',')
                     for i in range(len(wxuid)):
                         send_message(wxuid[i], accessToken, tpl_id[1], wxmessage)
-                    return wxmessage
+                    return "{}位置：{}".format(location[9:], response.json()['msg'])
                 return "{}位置：{}".format(location[9:], response.json()['msg'])
         return "当前没有座位可退"
 
@@ -233,7 +247,7 @@ class Library:
                 response = self.session.get(
                     url='https://office.chaoxing.com/data/apps/seat/cancel?id={}'.format(index['id']))
                 if response.json()['success']:
-                    return "{}：座位已取消".format(location)
+                    return "{}：座位已取消".format(location[9:])
                 return "{}：{}".format(location[9:], response.json()['msg'])
         return "当前没有座位可取消"
 
@@ -253,12 +267,21 @@ class Library:
 if __name__ == '__main__':
     usernames, passwords = get_user_credentials(action=True)
     username, password = usernames.split(',')[0], passwords.split(',')[0]
-    lib = Library(username, password)
 
-    if '07:45:00' <= get_current_time() <= '08:15:00':
+    lib = Library(username, password)
+    status_0, status_1 = lib.get_seat_reservation_info()
+    current_time = get_current_time()
+
+    if '07:45:00' <= current_time <= '08:15:00':
         print(lib.sign())
-    elif '19:45:00' <= get_current_time() <= '19:55:00':
+    elif '19:45:00' <= current_time <= '19:55:00':
         print(lib.signback())
     else:
-        print(lib.sign())
-        print("Error: 未在规定时间，估采用签到策略执行.")
+        print("Warning: 存在多个预定采用测试流程.")
+        if len(status_0) + len(status_1) > 1:
+            study_endtime = lib.t_time_hms(status_1[0]['endTime'])
+            if '11:55:00' <= study_endtime <= '12:05:00' or '15:55:00' <= study_endtime <= '16:05:00':
+                print(lib.signback())
+                print(lib.sign())
+        else:
+            print("Success: 已不存在多个预定.")

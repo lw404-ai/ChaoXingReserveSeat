@@ -224,7 +224,7 @@ class reserve:
     def submit(self, times, roomid, seatid, action):
         for seat in seatid:
             suc = False
-            while ~suc and self.max_attempt > 0:
+            while not suc and self.max_attempt > 0:
                 token = self._get_page_token(self.url.format(roomid, seat))
                 logger.info(f"Get user token")
                 captcha = self.resolve_captcha() if self.enable_slider else "" 
@@ -264,10 +264,13 @@ class reserve:
         self.submit_msg.append(
             times[0] + "~" + times[1] + ':  ' + str(json.loads(html)))
         data = json.loads(html)
-        new_data = {
-            'levelName': data['data']['seatReserve']['secondLevelName'],    
-            'seatNum': data['data']['seatReserve']['seatNum'],  
-            'success': data['success']
-        }
-        logger.info(f"{new_data} \n")
+        if data["success"] == True:
+            new_data = {
+                'levelName': data['data']['seatReserve']['secondLevelName'],    
+                'seatNum': data['data']['seatReserve']['seatNum'],  
+                'success': data['success']
+            }
+            logger.info(f"{new_data} \n")
+        else:
+            logger.info(f"{data} \n")
         return data["success"]
