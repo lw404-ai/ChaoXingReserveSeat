@@ -199,7 +199,7 @@ class Library:
                 tpl_id = template_id.split(',')
                 for i in range(len(wxuid)):
                     send_message(wxuid[i], accessToken, tpl_id[1], wxmessage)
-                return "{}位置：{}".format(location[9:], response.json()['msg'])
+                return "{}位置：签到成功".format(location[9:])
             return "{}位置：{}".format(location[9:], response.json()['msg'])
         return "没有座位可以签到"
 
@@ -227,13 +227,13 @@ class Library:
                 response = self.session.get(
                     url='https://office.chaoxing.com/data/apps/seat/signback?id={}'.format(index['id']))
                 if response.json()['success']:
-                    wxmessage = "{}：已退出".format(location)
+                    wxmessage = "{}：退出成功".format(location)
                     accessToken, wxuserid, template_id = get_access_token()
                     wxuid = wxuserid.split(',')
                     tpl_id = template_id.split(',')
                     for i in range(len(wxuid)):
                         send_message(wxuid[i], accessToken, tpl_id[1], wxmessage)
-                    return "{}位置：{}".format(location[9:], response.json()['msg'])
+                    return "{}位置：退出成功".format(location[9:])
                 return "{}位置：{}".format(location[9:], response.json()['msg'])
         return "当前没有座位可退"
 
@@ -277,8 +277,9 @@ if __name__ == '__main__':
     elif '19:45:00' <= current_time <= '19:55:00':
         print(lib.signback())
     else:
-        print("Warning: 存在多个预定采用测试流程.")
+        print("Warning: 非正常预约时间进行操作.")
         if len(status_0) + len(status_1) > 1:
+            print("Warning: 存在多个预定采用测试流程.")
             study_endtime = lib.t_time_hms(status_1[0]['endTime'])
             if '11:55:00' <= study_endtime <= '12:05:00' or '15:55:00' <= study_endtime <= '16:05:00':
                 print(lib.signback())
